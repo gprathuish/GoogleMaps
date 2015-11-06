@@ -1,0 +1,132 @@
+<div id="map" class="col-lg-6"></div>
+<div class="col-lg-6 ">
+
+	<div class="well">
+		<h3><%= @user.name %></h3>
+		<% @locations.each do |f| %>
+			<div class="radio">
+			  <label>
+			  	<%= radio_button_tag "radioLocation", f.id, "data-lat"  => f.lat, "data-lng"  => f.lng %>		    
+			    <%= f.title %>
+			  </label>
+			</div>
+		<%end%>
+
+
+		<div class="radio">
+		  <label>
+		    <input type="radio" name="radioLocation" id="optionsRadios3" value="form" >
+		    Add New Location
+		  </label>
+		</div>
+	</div>
+	
+	<div class="well" id="location">
+		
+	</div>
+
+	<div class="well" id="add-location">
+
+		<%= form_for @location, url: add_location_user_path(@user), html: {class: "form"} do |f| %>		
+		  <div class="form-group">
+		    <label for="title">Title</label>
+		    <%= f.text_field :title, class: "form-control", placeholder: "Enter Title"%>		    
+		  </div>
+
+		  <div class="form-group">
+		    <label for="lat">Lat</label>
+		    <%= f.text_field :lat, class: "form-control", placeholder: "Click on Map"%>		    
+		  </div>
+
+		  <div class="form-group">
+		    <label for="lng">Lng</label>
+		    <%= f.text_field :lng, class: "form-control", placeholder: "Click on Map"%>
+		  </div>
+
+		  <div class="form-group">
+		    <label for="description">Description</label>
+		    <%= f.text_area :description, class: "form-control", placeholder: "Enter Description", rows: 5%>
+		  </div>	  
+		  
+		  <%= f.submit "Save", class: "btn btn-default" %>		  
+
+		<%end%>
+	</div>
+</div>
+
+<script>
+	var map;
+	var marker;
+  
+	function initMap() {	
+		var myLatLng = {lat: 17.6883, lng: 83.2186};	
+	  // var myLatLng = {lat: 17.72121809544608, lng: 83.30331802368164};
+
+	  map = new google.maps.Map(document.getElementById('map'), {
+	    zoom: 12,
+	    zoomControl: true,
+	    center: myLatLng
+	  });
+
+	  //Create new marker on click
+	  google.maps.event.addListener(map, 'click', function(event) {		    		  
+	  	console.log(marker != undefined)	  
+
+	  	if ($('input[name=radioLocation]:checked').val() == "form") {
+	  		if (marker != undefined) {
+	  			clearMarkers();
+	  		}
+	  		
+
+		  	marker = new google.maps.Marker({position: {lat: event.latLng.lat(), lng: event.latLng.lng()}, map: map, name: "hi"});
+
+			  $("#location_lat").val(marker.position.lat());
+			  $("#location_lng").val(marker.position.lng());		  	
+	  	}		  
+		});
+
+	}
+
+	// Removes the markers from the map, but keeps them in the array.
+	function clearMarkers() {		
+	  marker.setMap(null);
+	}	
+
+	// Adds a marker to the map and push to the array.
+	function addMarker(lats, lngs) {
+		if (marker != undefined) {
+			clearMarkers();
+		}
+
+		var myLatLng = {lat: parseFloat(lats), lng: parseFloat(lngs)};
+	  marker = new google.maps.Marker({
+	    position: myLatLng,
+	    map: map
+	  });
+	}
+
+	$(document).ready(function(){
+		
+		$('#location').hide();
+		$('#add-location').hide();
+
+		$('input[name=radioLocation]:radio').change(function(){
+			console.log(this.value);
+			if (marker != undefined) {
+	  		clearMarkers();
+	  	}
+			if(this.value == 'form'){
+				$('#location').hide();
+				$('#add-location').show();
+
+			}else{
+				$.get("/location/"+this.value, function(data){});				
+
+				$('#add-location').hide();
+				$('#location').show();
+			}
+		});
+			
+	});
+	
+</script>
